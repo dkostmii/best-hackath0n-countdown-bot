@@ -1,6 +1,6 @@
 # best-hackath0n-countdown-bot
 
-This repo will contain countdown bot for BEST::HACKath0n 2024.
+This repo cotains countdown bot for BEST::HACKath0n 2024.
 
 ## How to use?
 
