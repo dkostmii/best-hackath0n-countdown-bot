@@ -40,14 +40,14 @@ except Exception as e:
     logging.critical("Uncaught exception while configuring the bot", exc_info=e)
 
 
+markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
+button = telebot.types.KeyboardButton(captions["button"])
+markup.add(button)
+
+
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "Howdy, how are you doing?")
-
-
-@bot.message_handler(func=lambda message: True)
-def echo_all(message):
-    bot.reply_to(message, message.text)
+    bot.reply_to(message, captions["start"], reply_markup=markup)
 
 
 try:
