@@ -4,3 +4,6 @@
 
 # Python venv
 [.v|v]env
+
+# Python cache
+**/__pycache__
