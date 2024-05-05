@@ -106,7 +106,10 @@ try:
     if config["webhook"]:
         logging.debug("Webhook domain: %s", WEBHOOK_DOMAIN)
         logging.debug("Webhook port: %d", WEBHOOK_PORT)
-        bot.run_webhooks(listen=WEBHOOK_DOMAIN, port=WEBHOOK_PORT)
+        bot.run_webhooks(
+            listen=WEBHOOK_DOMAIN, port=WEBHOOK_PORT,
+            webhook_url="https://{}:{}/{}/".format(WEBHOOK_DOMAIN, WEBHOOK_PORT, BOT_TOKEN)
+        )
     else:
         bot.infinity_polling()
 
