@@ -36,6 +36,7 @@ try:
     logging.info("Done configuring the bot!")
 except Exception as e:
     logging.critical("Uncaught exception while configuring the bot", exc_info=e)
+    exit(1)
 
 
 markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
@@ -91,3 +92,4 @@ try:
     logging.info("Normally stopping the bot!")
 except Exception as e:
     logging.critical("Uncaught exception while running the bot", exc_info=e)
+    exit(1)
