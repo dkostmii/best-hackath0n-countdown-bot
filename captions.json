@@ -24,9 +24,9 @@
         "many": "BEST::HACKath0n 2024 уже відбувся {n} хвилин тому.💚"
     },
     "countdown_past_progress": {
-        "zero": "",
-        "one": "BEST::HACKath0n 2024 уже триває {n} хвилину.💚",
-        "few": "BEST::HACKath0n 2024 уже триває {n} хвилини.💚",
-        "many": "BEST::HACKath0n 2024 уже триває {n} хвилин.💚"
+        "zero": "BEST::HACKath0n 2024 уже завершився.💚",
+        "one": "BEST::HACKath0n 2024 завершиться через {n} хвилину.💚",
+        "few": "BEST::HACKath0n 2024 завершиться через {n} хвилини.💚",
+        "many": "BEST::HACKath0n 2024 завершиться через {n} хвилин.💚"
     }
 }

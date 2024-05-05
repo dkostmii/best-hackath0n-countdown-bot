@@ -80,8 +80,9 @@ def button_handler(message):
         diff = now_dt - countdown_dt
         diff_min = int(diff.total_seconds() / 60)
 
-        if diff_min < progress_timeout_min:
-            reply_text = pluralize(diff_min, captions["countdown_past_progress"])
+        if diff_min <= progress_timeout_min:
+            remaining_min = progress_timeout_min - diff_min
+            reply_text = pluralize(remaining_min, captions["countdown_past_progress"])
         else:
             reply_text = pluralize(diff_min, captions["countdown_past"])
 
