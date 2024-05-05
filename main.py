@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import json
 import logging
 from os import environ
 
@@ -7,6 +6,7 @@ from dotenv import load_dotenv
 import telebot
 
 from pluralize import pluralize
+from read_json import ReadJSONException, read_json
 
 load_dotenv()
 BOT_TOKEN = environ.get("BOT_TOKEN") or ""
@@ -17,23 +17,17 @@ logging.debug("Bot token: %s", BOT_TOKEN)
 logging.debug("Log level: %d", LOG_LEVEL)
 
 
-def read_json(json_filename: str) -> dict:
-    try:
-        with open(json_filename, mode="r") as f:
-            result = json.load(f)
-
-        if not isinstance(result, dict):
-            raise Exception("Expected result to be dict")
-
-        return result
-    except OSError as e:
-        logging.error("Error reading JSON file %s", json_filename, exc_info=e)
-    except Exception as e:
-        logging.critical("Uncaught exception while reading JSON file %", json_filename, exc_info=e)
-
-
-data = read_json("data.json")
-captions = read_json("captions.json")
+try:
+    logging.info("Reading data...")
+    data = read_json("data.json")
+    captions = read_json("captions.json")
+    logging.info("Done reading data!")
+except ReadJSONException as e:
+    logging.error("Error while reading data and captions", exc_info=e)
+    exit(1)
+except Exception as e:
+    logging.critical("Uncaught exception while reading data and captions", exc_info=e)
+    exit(1)
 
 
 try:
