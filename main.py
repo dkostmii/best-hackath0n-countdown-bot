@@ -10,10 +10,10 @@ from read_json import ReadJSONException, read_json
 
 load_dotenv()
 BOT_TOKEN = environ.get("BOT_TOKEN") or ""
-LOG_LEVEL = int(environ.get("LOG_LEVEL")) or 20
+LOG_LEVEL = int(environ.get("LOG_LEVEL") or "20")
 ENV = environ.get("ENV") or ""
 WEBHOOK_DOMAIN = environ.get("WEBHOOK_DOMAIN") or "127.0.0.1"
-WEBHOOK_PORT = environ.get("WEBHOOK_PORT") or 80
+WEBHOOK_PORT = int(environ.get("WEBHOOK_PORT") or "80")
 
 is_dev_env = ENV == "dev"
 
