@@ -11,22 +11,34 @@ from read_json import ReadJSONException, read_json
 load_dotenv()
 BOT_TOKEN = environ.get("BOT_TOKEN") or ""
 LOG_LEVEL = int(environ.get("LOG_LEVEL")) or 20
+ENV = environ.get("ENV") or ""
+WEBHOOK_DOMAIN = environ.get("WEBHOOK_DOMAIN") or "127.0.0.1"
+WEBHOOK_PORT = environ.get("WEBHOOK_PORT") or 80
+
+is_dev_env = ENV == "dev"
 
 logging.basicConfig(level=LOG_LEVEL)
+logging.debug("Is Development: %s", is_dev_env)
 logging.debug("Bot token: %s", BOT_TOKEN)
 logging.debug("Log level: %d", LOG_LEVEL)
 
 
 try:
     logging.info("Reading data...")
-    data = read_json("data.json")
+
+    config = read_json("config.dev.json" if is_dev_env else "config.json")
+    data = config["data"]
+
+    if not isinstance(data, dict):
+        raise ReadJSONException("config.json", "Expected data to be object")
+
     captions = read_json("captions.json")
     logging.info("Done reading data!")
 except ReadJSONException as e:
-    logging.error("Error while reading data and captions", exc_info=e)
+    logging.error("Error while reading config and captions", exc_info=e)
     exit(1)
 except Exception as e:
-    logging.critical("Uncaught exception while reading data and captions", exc_info=e)
+    logging.critical("Uncaught exception while reading config and captions", exc_info=e)
     exit(1)
 
 
@@ -88,7 +100,15 @@ def button_handler(message):
 
 try:
     logging.info("Starting the bot...")
-    bot.infinity_polling()
+    logging.info("Running in %s mode", "webhook" if config["webhook"] else "polling")
+
+    if config["webhook"]:
+        logging.debug("Webhook domain: %s", WEBHOOK_DOMAIN)
+        logging.debug("Webhook port: %d", WEBHOOK_PORT)
+        bot.run_webhooks(listen=WEBHOOK_DOMAIN, port=WEBHOOK_PORT)
+    else:
+        bot.infinity_polling()
+
     logging.info("Normally stopping the bot!")
 except Exception as e:
     logging.critical("Uncaught exception while running the bot", exc_info=e)
