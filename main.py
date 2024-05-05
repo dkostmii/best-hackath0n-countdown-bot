@@ -9,11 +9,11 @@ from pluralize import pluralize
 from read_json import ReadJSONException, read_json
 
 load_dotenv()
-BOT_TOKEN = environ.get("BOT_TOKEN") or ""
-LOG_LEVEL = int(environ.get("LOG_LEVEL") or "20")
-ENV = environ.get("ENV") or ""
-WEBHOOK_DOMAIN = environ.get("WEBHOOK_DOMAIN") or "127.0.0.1"
-WEBHOOK_PORT = int(environ.get("WEBHOOK_PORT") or "80")
+BOT_TOKEN = environ.get("BOT_TOKEN") or environ.get("APPSETTING_BOT_TOKEN") or ""
+LOG_LEVEL = int(environ.get("LOG_LEVEL") or environ.get("APPSETTING_LOG_LEVEL") or "20")
+ENV = environ.get("ENV") or environ.get("APPSETTING_ENV") or ""
+WEBHOOK_DOMAIN = environ.get("WEBHOOK_DOMAIN") or environ.get("APPSETTING_WEBHOOK_DOMAIN") or "127.0.0.1"
+WEBHOOK_PORT = int(environ.get("WEBHOOK_PORT") or environ.get("APPSETTING_WEBHOOK_PORT") or "80")
 
 is_dev_env = ENV == "dev"
 
