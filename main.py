@@ -1,11 +1,10 @@
-from datetime import datetime, timedelta
 import logging
 from os import environ
 
 from dotenv import load_dotenv
 import telebot
 
-from pluralize import pluralize
+from countdown import CountdownData, get_countdown_message
 from read_json import ReadJSONException, read_json
 
 load_dotenv()
@@ -51,61 +50,71 @@ except Exception as e:
     exit(1)
 
 
-markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
-button = telebot.types.KeyboardButton(captions["button"])
-markup.add(button)
+start_markup = telebot.util.quick_markup({
+    captions["start"]["button"]: {'callback_data': 'start_button'},
+    captions["start"]["github"]["caption"]: {'url': captions["start"]["github"]["url"]}
+}, row_width=1)
+
+choose_format_markup = telebot.util.quick_markup({
+    captions["choose_format"]["days"]: {'callback_data': 'choose_format_days'},
+    captions["choose_format"]["hours"]: {'callback_data': 'choose_format_hours'},
+    captions["choose_format"]["minutes"]: {'callback_data': 'choose_format_minutes'},
+    captions["home"]: {'callback_data': 'home'}
+})
+
+
+def get_countdown_markup(format: str) -> telebot.types.InlineKeyboardMarkup:
+    countdown_markup = telebot.util.quick_markup({
+        captions["countdown"]["refresh"]: {'callback_data': f'refresh_{format}'},
+        captions["home"]: {'callback_data': 'home'}
+    })
+
+    return countdown_markup
 
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, captions["start"], reply_markup=markup)
+    bot.reply_to(message, captions["start"]["message"], reply_markup=start_markup)
 
 
-@bot.message_handler(func=lambda m: m.text == captions["button"])
-def button_handler(message):
-    countdown_dt = data["countdown_dt_iso"]
-    countdown_dt = datetime.fromisoformat(countdown_dt)
-    tz = countdown_dt.tzinfo
-    now_dt = datetime.now(tz=tz)
-    now_weekday = captions["weekday"][now_dt.weekday()]
-    now_time_hh_mm = now_dt.strftime("%H:%M")
+@bot.callback_query_handler(func=lambda m: m.data == "start_button")
+def start_button_call_handler(call):
+    bot.edit_message_text(captions["choose_format"]["message"], call.message.chat.id, call.message.message_id)
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=choose_format_markup)
 
-    countdown_dt = countdown_dt.replace(second=0, microsecond=0)
-    now_dt = now_dt.replace(second=0, microsecond=0)
 
-    if countdown_dt < now_dt:
-        progress_timeout = timedelta(hours=24)
-        progress_timeout_min = int(progress_timeout.total_seconds() / 60)
+@bot.callback_query_handler(func=lambda m: m.data == "home")
+def home_call_handler(call):
+    bot.edit_message_text(captions["start"]["message"], call.message.chat.id, call.message.message_id)
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=start_markup)
 
-        diff = now_dt - countdown_dt
-        diff_min = int(diff.total_seconds() / 60)
 
-        if diff_min <= progress_timeout_min:
-            remaining_min = progress_timeout_min - diff_min
-            reply_text = pluralize(remaining_min, captions["countdown_past_progress"])
-        else:
-            reply_text = pluralize(diff_min, captions["countdown_past"])
+@bot.callback_query_handler(func=lambda m: m.data.startswith("choose_format_"))
+def choose_format_call_handler(call):
+    required_format = call.data.replace("choose_format_", "")
+    markup = get_countdown_markup(required_format)
+    message = get_countdown_message(cd=CountdownData(weekday_captions=captions["countdown"]["weekday"], data=data), countdown_captions=captions["countdown"], format=required_format)
 
-        reply_text = reply_text.format(n=diff_min)
-        bot.reply_to(message, text=reply_text, reply_markup=markup)
-    elif countdown_dt > now_dt:
-        diff = countdown_dt - now_dt
-        diff_min = int(diff.total_seconds() / 60)
-        reply_text = pluralize(diff_min, captions["countdown"], weekday=now_weekday, time_hh_mm=now_time_hh_mm)
-        bot.reply_to(message, text=reply_text, reply_markup=markup)
-    else:
-        reply_text = captions["countdown_now"]
-        reply_text = reply_text.format(weekday=now_weekday, time_hh_mm=now_time_hh_mm)
-        bot.reply_to(message, text=reply_text, reply_markup=markup)
+    bot.edit_message_text(message, call.message.chat.id, call.message.message_id)
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=markup)
+
+
+@bot.callback_query_handler(func=lambda m: m.data.startswith("refresh_"))
+def refresh_call_handler(call):
+    call.data = call.data.replace("refresh_", "")
+    return choose_format_call_handler(call)
 
 
 try:
     logging.info("Starting the bot...")
     logging.info("Running in %s mode", "webhook" if config["webhook"] else "polling")
+    logging.info("Calling deleteWebhook, to avoid getUpdates method error, when webhook is active")
+    bot.delete_webhook()
 
     if config["webhook"]:
         logging.debug("Webhook domain: %s", WEBHOOK_DOMAIN)
         logging.debug("Webhook port: %d", WEBHOOK_PORT)
+
         bot.run_webhooks(
             listen="0.0.0.0", port=WEBHOOK_PORT,
             webhook_url="https://{}:{}/{}/".format(WEBHOOK_DOMAIN, WEBHOOK_PORT, BOT_TOKEN)
