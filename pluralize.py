@@ -1,4 +1,4 @@
-def pluralize(n: int = 1, pluralizations_dict: dict[str, str] = {}, **kwargs) -> str | None:
+def pluralize(n: int = 1, pluralizations_dict: dict[str, str] = {}, **kwargs) -> str:
     if n == 0:
         return pluralizations_dict["zero"].format(n=n, **kwargs)
 
@@ -15,3 +15,17 @@ def pluralize(n: int = 1, pluralizations_dict: dict[str, str] = {}, **kwargs) ->
         return pluralizations_dict["few"].format(n=n, **kwargs)
 
     return pluralizations_dict["many"].format(n=n, **kwargs)
+
+
+def pluralize_multiple(template: str, values: dict[str, int], pluralizations_dicts_multiple: dict[str, dict[str, str]], **kwargs) -> str:
+    result = template
+
+    for k, v in values.items():
+        n = v
+        pluralizations_dict = pluralizations_dicts_multiple[k]
+        pluralization = pluralize(n, pluralizations_dict, **kwargs)
+        result = result.replace("{" + k + "}", pluralization)
+
+    result = result.format(**kwargs)
+
+    return result
