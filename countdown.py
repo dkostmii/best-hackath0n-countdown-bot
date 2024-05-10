@@ -58,7 +58,11 @@ def get_pluralizations_values(format: str, delta: timedelta) -> dict[str, int]:
         hours = min // 60
         min = min - hours * 60
 
-        result.update({'hours': hours, 'minutes': min})
+        if hours != 0:
+            result.update({'hours': hours, 'minutes': min})
+
+        if min == 0:
+            del result["minutes"]
 
     elif format == 'days':
         hours = min // 60
@@ -67,17 +71,33 @@ def get_pluralizations_values(format: str, delta: timedelta) -> dict[str, int]:
         days = hours // 24
         hours = hours - days * 24
 
-        result.update({'days': days, 'hours': hours, 'minutes': min})
+        if days != 0:
+            result.update({'days': days, 'minutes': min})
+
+        if hours != 0:
+            result.update({'hours': hours, 'minutes': min})
+
+        if min == 0:
+            del result["minutes"]
 
     return result
 
 
-def prepare_template_for_format(template: str, format: str) -> str:
+def prepare_template_for_format(values: dict[str, int], template: str, format: str) -> str:
     result = template
     if format == "hours":
         result = result.replace("{days} ", "")
     elif format == "minutes":
         result = result.replace("{days} ", "").replace("{hours} ", "")
+
+    if not "days" in values:
+        result = result.replace("{days} ", "")
+
+    if not "hours" in values:
+        result = result.replace("{hours} ", "")
+
+    if not "minutes" in values:
+        result = result.replace(" {minutes}", "").replace("{minutes}", "")
 
     return result
 
@@ -86,12 +106,12 @@ def get_countdown_past_message(diff: timedelta, progress_timeout: timedelta, for
     if diff < progress_timeout:
         remaining = progress_timeout - diff
         values = get_pluralizations_values(format, remaining)
-        template = prepare_template_for_format(template=templates["past_progress"], format=format)
+        template = prepare_template_for_format(values=values, template=templates["past_progress"], format=format)
         message = pluralize_multiple(template, values, pluralizations_dicts_multiple)
     elif diff > progress_timeout:
         past = diff - progress_timeout
         values = get_pluralizations_values(format, past)
-        template = prepare_template_for_format(template=templates["past"], format=format)
+        template = prepare_template_for_format(values=values, template=templates["past"], format=format)
         message = pluralize_multiple(template, values, pluralizations_dicts_multiple)
     else:
         template = templates["past_now"]
@@ -111,7 +131,7 @@ def get_countdown_message(cd: CountdownData, format: str, countdown_captions: di
     elif cd.countdown_dt > cd.now_dt:
         diff = cd.countdown_dt - cd.now_dt
         values = get_pluralizations_values(format, diff)
-        template = prepare_template_for_format(template=templates["default"], format=format)
+        template = prepare_template_for_format(values=values, template=templates["default"], format=format)
         message = pluralize_multiple(template, values, pluralizations_dicts_multiple, weekday=cd.now_weekday, time_hh_mm=cd.now_time_hh_mm)
         return message
 
