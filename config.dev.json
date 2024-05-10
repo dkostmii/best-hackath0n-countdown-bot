@@ -1,6 +1,9 @@
 {
-    "data": {
-        "countdown_dt_iso": "2024-05-11T09:15:00+03:00"
-    },
-    "webhook": false
+  "data": {
+    "dts": {
+      "countdown_dt_iso": "2024-05-10T09:45:00+03:00",
+      "end_dt_iso": "2024-05-11T18:15:00+03:00"
+    }
+  },
+  "webhook": false
 }

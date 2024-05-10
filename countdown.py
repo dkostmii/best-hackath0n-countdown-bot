@@ -4,18 +4,22 @@ from pluralize import pluralize_multiple
 
 class CountdownData:
     countdown_dt: datetime
+    end_dt: datetime
     now_dt: datetime
     _weekday_captions: list[str]
 
     def __init__(self, weekday_captions: list[str], data: dict[str, str]):
         self._weekday_captions = weekday_captions
 
-        countdown_dt_iso = data["countdown_dt_iso"]
+        countdown_dt_iso = data["dts"]["countdown_dt_iso"]
+        end_dt_iso = data["dts"]["end_dt_iso"]
         self.countdown_dt = datetime.fromisoformat(countdown_dt_iso)
+        self.end_dt = datetime.fromisoformat(end_dt_iso)
         tz = self.countdown_dt.tzinfo
         self.now_dt = datetime.now(tz=tz)
 
         self.countdown_dt = self.countdown_dt.replace(second=0, microsecond=0)
+        self.end_dt = self.end_dt.replace(second=0, microsecond=0)
         self.now_dt = self.now_dt.replace(second=0, microsecond=0)
 
     @property
@@ -101,7 +105,7 @@ def get_countdown_message(cd: CountdownData, format: str, countdown_captions: di
     pluralizations_dicts_multiple = get_pluralizations_dicts_multiple(format, countdown_captions)
 
     if cd.countdown_dt < cd.now_dt:
-        progress_timeout = timedelta(hours=24)
+        progress_timeout = cd.end_dt - cd.countdown_dt
         diff = cd.now_dt - cd.countdown_dt
         return get_countdown_past_message(diff, progress_timeout, format, pluralizations_dicts_multiple, templates)
     elif cd.countdown_dt > cd.now_dt:
