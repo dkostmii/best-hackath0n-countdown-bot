@@ -1,3 +1,4 @@
+from typing import cast
 from datetime import datetime, timedelta
 from pluralize import pluralize_multiple
 
@@ -8,7 +9,7 @@ class CountdownData:
     now_dt: datetime
     _weekday_captions: list[str]
 
-    def __init__(self, weekday_captions: list[str], data: dict[str, str]):
+    def __init__(self, weekday_captions: list[str], data: dict[str, dict[str, str]]):
         self._weekday_captions = weekday_captions
 
         countdown_dt_iso = data["dts"]["countdown_dt_iso"]
@@ -31,8 +32,8 @@ class CountdownData:
         return self.now_dt.strftime("%H:%M")
 
 
-def get_pluralizations_dicts_multiple(format: str, countdown_captions: dict[str, str | dict[str, str]]) -> dict[str, dict[str, str]]:
-    result = countdown_captions["units"]
+def get_pluralizations_dicts_multiple(format: str, units: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
+    result = units
 
     if format == 'hours':
         result = {
@@ -120,9 +121,11 @@ def get_countdown_past_message(diff: timedelta, progress_timeout: timedelta, for
     return message
 
 
-def get_countdown_message(cd: CountdownData, format: str, countdown_captions: dict[str, str | dict[str, str]]) -> str:
-    templates = countdown_captions["templates"]
-    pluralizations_dicts_multiple = get_pluralizations_dicts_multiple(format, countdown_captions)
+def get_countdown_message(cd: CountdownData, format: str, countdown_captions: dict[str, dict[str, dict[str, str] | str]]) -> str:
+    templates = cast(dict[str, str], countdown_captions["templates"])
+    units = cast(dict[str, dict[str, str]], countdown_captions["units"])
+
+    pluralizations_dicts_multiple = get_pluralizations_dicts_multiple(format, units=units)
 
     if cd.countdown_dt < cd.now_dt:
         progress_timeout = cd.end_dt - cd.countdown_dt
